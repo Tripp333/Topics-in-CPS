@@ -42,13 +42,6 @@ def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict):
 
     
 def row_col_finder(arc: tuple, keys: list, costs: dict, supply_size, demand_size, U, V):
-    for i in range(supply_size):
-        new_arc = (i, arc[1])
-        if new_arc in keys:
-            U[i] = costs[new_arc] - V[arc[1]]
-            keys.remove(new_arc)
-            U, V = row_col_finder(new_arc, keys, costs, supply_size, demand_size, U, V)
-    
     for j in range(demand_size):
         new_arc = (arc[0], j)
         if new_arc in keys:
@@ -56,6 +49,13 @@ def row_col_finder(arc: tuple, keys: list, costs: dict, supply_size, demand_size
             keys.remove(new_arc)
             U, V = row_col_finder(new_arc, keys, costs, supply_size, demand_size, U, V)
 
+    for i in range(supply_size):
+        new_arc = (i, arc[1])
+        if new_arc in keys:
+            U[i] = costs[new_arc] - V[arc[1]]
+            keys.remove(new_arc)
+            U, V = row_col_finder(new_arc, keys, costs, supply_size, demand_size, U, V)
+    
     return U, V
 
 def find_reduced_costs(costs: dict, U: list, V: list):
@@ -80,6 +80,10 @@ def optimality_test(reduced_matrix: dict):
         return minimum_arc
 
 def find_row_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size):
+    if potential_arc in keys:
+        keys.remove(potential_arc)
+
+
     for j in range(demand_size):
         new_row_arc = (potential_arc[0], j)
         if new_row_arc == original_min_arc and cycle_size > 1:
@@ -88,16 +92,25 @@ def find_row_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_a
     
     for j in range(demand_size):
         new_arc = (potential_arc[0], j)
-        if new_arc == original_min_arc and cycle_size > 1:
-            return cycle
         if new_arc in keys and new_arc != potential_arc:
-            keys.remove(new_arc)
             cycle.append(potential_arc)
             cycle_size += 1
-            return find_col_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size)
+            keys.append(potential_arc)
+            cycle = find_col_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size)
+            if cycle[0] == True:
+                keys.remove(potential_arc)
+                cycle[1].remove(potential_arc)
+                cycle_size -= 1
+                cycle = cycle[1]
+            else:
+                return cycle
 
+    return True, cycle
 
 def find_col_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size):
+    if potential_arc in keys:
+        keys.remove(potential_arc)
+
     for i in range(supply_size):
         new_col_arc = (i, potential_arc[1])
         if new_col_arc == original_min_arc and cycle_size > 1:
@@ -110,8 +123,17 @@ def find_col_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_a
             keys.remove(new_arc)
             cycle.append(potential_arc)
             cycle_size += 1
-            return find_row_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size)
+            keys.append(potential_arc)
+            cycle = find_row_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size)
+            if cycle[0] == True:
+                keys.remove(potential_arc)
+                cycle[1].remove(potential_arc)
+                cycle_size -= 1
+                cycle = cycle[1]
+            else:
+                return cycle
 
+    return True, cycle
 
 
 def enter_and_leave(sent: dict, cycle: list, entering: tuple):
@@ -127,7 +149,7 @@ def enter_and_leave(sent: dict, cycle: list, entering: tuple):
     minimum_odd = max([sent[arc] for arc in odds])
     leaving = ()
     for arc in odds:
-        if sent[arc] < minimum_odd:
+        if sent[arc] <= minimum_odd:
             minimum_odd = sent[arc]
             leaving = arc
 
@@ -151,8 +173,14 @@ def find_total_cost(sent: dict, costs: dict):
 
     return total_cost
 
+def tuple_adder(tuple, amount):
+    new_tuple = (tuple[0] + amount, tuple[1] + amount)
+    return new_tuple
+
+
 
 def transportation_algorithm(supply_size, demand_size, supplies, demands, costs):
+
     sent = initialization(supply_size, demand_size, supplies, demands, costs)
     U, V = compound_var(supply_size, demand_size, sent, costs)
     
@@ -167,8 +195,12 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
         optimum = optimality_test(reduced_matrix)
 
     total_cost = find_total_cost(sent, costs)
+    arcs = list(sent.keys())
+    arcs.sort()
+    sorted_sent = {tuple_adder(i, 1): sent[i] for i in arcs}
+        
 
-    return sent, total_cost
+    return sorted_sent, total_cost
 
 
 if __name__=="__main__":
