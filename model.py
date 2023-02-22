@@ -10,7 +10,8 @@ def dummy_supply(costs, sent, supply_size, demand_size, dummy_size):
     
     for j in range(demand_size):
         costs[(supply_size, j)] = dummy_cost
-        costs[supply_size] = True
+    
+    costs[supply_size] = True
 
     return costs, sent, dummy_size
 
@@ -21,7 +22,8 @@ def dummy_demand(costs: dict, sent: dict, supply_size, demand_size, dummy_size):
     
     for i in range(supply_size):
         costs[(i, demand_size)] = dummy_cost
-        costs[demand_size] = False
+    
+    costs[demand_size] = False
 
     return costs, sent, dummy_size
 
@@ -62,6 +64,7 @@ def initialization(supply_size, demand_size, supplies, demands, costs):
     if solutions:
         costs = solutions[0]
         sent = solutions[1]
+        dummy_size = solutions[2]
 
     return sent, costs, dummy_size
 
@@ -271,9 +274,9 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
         
     if sent[1]:
         if sent[2]:
-            print(f"Demand {sent[3]} will not be supplied. It will be missing {dummy_size} units.")
+            print(f"Demand {sent[3] + 1} will not receive {dummy_size} units.")
         else:
-            print(f"Supply {sent[3]} will not be supplied. It will hold {dummy_size} units.")
+            print(f"Supply {sent[3] + 1} will not send {dummy_size} units.")
     return sorted_sent, total_cost
 
 
