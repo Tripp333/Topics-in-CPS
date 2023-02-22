@@ -3,17 +3,48 @@
 # Tripp Lawrence and Luke Lewis
 
 
+def dummy_supply(costs, sent, supply_size, demand_size, dummy_size):
+    sent[(supply_size, demand_size - 1)] = dummy_size
+
+    dummy_cost = 100 * max([costs[arc] for arc in costs])
+    
+    for j in range(demand_size):
+        costs[(supply_size, j)] = dummy_cost
+        costs[supply_size] = True
+
+    return costs, sent, dummy_size
+
+def dummy_demand(costs: dict, sent: dict, supply_size, demand_size, dummy_size):
+    sent[(supply_size - 1, demand_size)] = dummy_size
+
+    dummy_cost = 100 * max([costs[arc] for arc in costs])
+    
+    for i in range(supply_size):
+        costs[(i, demand_size)] = dummy_cost
+        costs[demand_size] = False
+
+    return costs, sent, dummy_size
+
+def dummy_test(supplies: list, demands: list, costs, sent):
+    supply = sum(supplies)
+    demand = sum(demands)
+
+    if supply == demand:
+        return None
+    
+    elif supply > demand:
+        return dummy_demand(costs, sent, supply_size, demand_size, supply - demand)
+
+    else:
+        return dummy_supply(costs, sent, supply_size, demand_size, demand - supply)
+
+
 def initialization(supply_size, demand_size, supplies, demands, costs):
     sent = {} # Initialization of the dictionary that contains the amount of supply sent from source i to demand j
     supply_count = 0 #
     demand_count = 0 #
-    # for i in range(supply_size):
-    #     supplies.append(int(input(f"Enter supply {i+1}: "))) # Initializaion of 
-    # for i in range(demand_size):
-    #     demands.append(int(input(f"Enter demand {i+1}: ")))
-    # for i in range(supply_size):
-    #     for j in range(demand_size):
-    #         costs[(i,j)] = int(input(f"Please enter cost to move supplies from supply {i+1} to demand {j+1}: "))
+    dummy_size = 0
+
     while supply_count < supply_size and demand_count < demand_size:
         if supplies[supply_count] <= demands[demand_count]:
             sent[(supply_count, demand_count)] = supplies[supply_count]
@@ -26,7 +57,13 @@ def initialization(supply_size, demand_size, supplies, demands, costs):
             demands[demand_count] = 0
             demand_count += 1
 
-    return sent
+    solutions = dummy_test(supplies, demands, costs, sent)
+
+    if solutions:
+        costs = solutions[0]
+        sent = solutions[1]
+
+    return sent, costs, dummy_size
 
 def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict):
     first_arc = (0,0)
@@ -177,11 +214,42 @@ def tuple_adder(tuple, amount):
     new_tuple = (tuple[0] + amount, tuple[1] + amount)
     return new_tuple
 
+def row_col_remover(sent: dict, costs, found):
+    to_be_deleted = []
+    non_dummy_coord = None
+    if costs[found]:
+        for arc in sent:
+            if arc[0] == found:
+                non_dummy_coord = arc[1]
+                to_be_deleted.append(arc)
+    else:
+        for arc in sent:
+            if arc[1] == found:
+                non_dummy_coord = arc[0]
+                to_be_deleted.append(arc)
+
+    for perishable in to_be_deleted:
+        sent.pop(perishable)
+
+    return sent, found, costs[found], non_dummy_coord
+
+def dummy_finder(sent, costs):
+    found = None
+
+    for arc in costs:
+        if type(arc) != tuple:
+            found = arc
+
+    if found:
+        return row_col_remover(sent, costs, found)
+    
+    return sent, found, None, None
+            
 
 
 def transportation_algorithm(supply_size, demand_size, supplies, demands, costs):
 
-    sent = initialization(supply_size, demand_size, supplies, demands, costs)
+    sent, costs, dummy_size = initialization(supply_size, demand_size, supplies, demands, costs)
     U, V = compound_var(supply_size, demand_size, sent, costs)
     
     reduced_matrix = find_reduced_costs(costs, U, V)
@@ -194,12 +262,18 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
         reduced_matrix = find_reduced_costs(costs, U, V)
         optimum = optimality_test(reduced_matrix)
 
-    total_cost = find_total_cost(sent, costs)
-    arcs = list(sent.keys())
-    arcs.sort()
-    sorted_sent = {tuple_adder(i, 1): sent[i] for i in arcs}
-        
+    sent = dummy_finder(sent, costs)
 
+    total_cost = find_total_cost(sent[0], costs)
+    arcs = list(sent[0].keys())
+    arcs.sort()
+    sorted_sent = {tuple_adder(i, 1): sent[0][i] for i in arcs}
+        
+    if sent[1]:
+        if sent[2]:
+            print(f"Demand {sent[3]} will not be supplied. It will be missing {dummy_size} units.")
+        else:
+            print(f"Supply {sent[3]} will not be supplied. It will hold {dummy_size} units.")
     return sorted_sent, total_cost
 
 
