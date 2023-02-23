@@ -1,51 +1,52 @@
 #Topics in Optimization: 
 #Computational Project
 # Tripp Lawrence and Luke Lewis
+# 02/24/2023
 
 
-def dummy_supply(costs, sent, supply_size, demand_size, dummy_size):
-    sent[(supply_size, demand_size - 1)] = dummy_size
+def dummy_supply(costs, sent, supply_size, demand_size, dummy_size): # This will create a dummy supply in our network.
+    sent[(supply_size, demand_size - 1)] = dummy_size # This takes the size of the dummy (determined in the dummy_test) and adds it to the sent dictionary (it becomes lowest row).
 
-    dummy_cost = 100 * max([costs[arc] for arc in costs])
+    dummy_cost = 100 * max([costs[arc] for arc in costs]) # This sets the cost of the dummy at 100 times larger than the largest cost in the network (big M cost).
     
-    for j in range(demand_size):
-        costs[(supply_size, j)] = dummy_cost
+    for j in range(demand_size): # This for loop actually connects the dummy_cost to every demand in the dummy_supply row.
+        costs[(supply_size, j)] = dummy_cost # And thus, all of the costs to send supply from this dummy supply are big M costs.
     
-    costs[supply_size] = True
+    costs[supply_size] = True # This adds one more item to the costs dictionary. This will allow us to remove the big M cost from the objective function later.
 
     return costs, sent, dummy_size
 
-def dummy_demand(costs: dict, sent: dict, supply_size, demand_size, dummy_size):
-    sent[(supply_size - 1, demand_size)] = dummy_size
-
-    dummy_cost = 100 * max([costs[arc] for arc in costs])
+def dummy_demand(costs: dict, sent: dict, supply_size, demand_size, dummy_size): # This will create a dummy demand in our network.
+    sent[(supply_size - 1, demand_size)] = dummy_size # This takes the size of the dummy (determined in the dummy_test) and adds it to the sent dictionary (it becomes the rightmost column).
+            #(The keys are the coordinates in the matrix)
+    dummy_cost = 100 * max([costs[arc] for arc in costs]) # This sets the cost of the dummy at 100 times larger than the largest cost in the network (big M cost).
     
-    for i in range(supply_size):
-        costs[(i, demand_size)] = dummy_cost
+    for i in range(supply_size): # This for loop actually connects the dummy_cost to every supply in the dummy_demand column.
+        costs[(i, demand_size)] = dummy_cost # And thus, all of the costs to send supply to this dummy demand are big M costs.
     
-    costs[demand_size] = False
+    costs[demand_size] = False # This adds one more item to the costs dictionary. This will allow us to remove the big M cost from the objective function later.
 
     return costs, sent, dummy_size
 
-def dummy_test(supplies: list, demands: list, costs, sent):
-    supply = sum(supplies)
-    demand = sum(demands)
+def dummy_test(supplies: list, demands: list, costs, sent): # This will test to see if there is a dummy supply/demand needed.
+    supply = sum(supplies) # This changes the list of supplies sent into a total number of supplies available.
+    demand = sum(demands) # This changes the list of demands requested into a total number demands needed.
 
-    if supply == demand:
-        return None
+    if supply == demand: # This tests to see if the amount of supplies = the amount of demands.
+        return None # If they are equal, then no dummy is needed.
     
-    elif supply > demand:
-        return dummy_demand(costs, sent, supply_size, demand_size, supply - demand)
+    elif supply > demand: # If the supply is greater than the demand, create a dummy demand.
+        return dummy_demand(costs, sent, supply_size, demand_size, supply - demand) # The last variable in this function (supply - demand) is the amount that the dummy demand is requesting.
 
-    else:
-        return dummy_supply(costs, sent, supply_size, demand_size, demand - supply)
+    else: # Otherwise, the demand has to be greater than the supply, and thus create a dummy supply.
+        return dummy_supply(costs, sent, supply_size, demand_size, demand - supply) # The last variable in this function (demand - supply) is the amount that the dummy supply needs to provice.
 
 
-def initialization(supply_size, demand_size, supplies, demands, costs):
+def initialization(supply_size, demand_size, supplies, demands, costs): # Initial Basic Feasible solution generator (using the NW Corner Method).
     sent = {} # Initialization of the dictionary that contains the amount of supply sent from source i to demand j
     supply_count = 0 #
     demand_count = 0 #
-    dummy_size = 0
+    dummy_size = 0 #
 
     while supply_count < supply_size and demand_count < demand_size:
         if supplies[supply_count] <= demands[demand_count]:
