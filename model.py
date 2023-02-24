@@ -4,29 +4,44 @@
 # 02/24/2023
 
 
+def find_max_cost(costs: dict):
+    max_cost = 0
+
+    for arc in costs:
+        if costs[arc] == "M":
+            continue
+        if costs[arc] > max_cost:
+            max_cost = costs[arc]
+
+    return max_cost
+
 def dummy_supply(costs, sent, supply_size, demand_size, dummy_size): # This will create a dummy supply in our network.
     sent[(supply_size, demand_size - 1)] = dummy_size # This takes the size of the dummy (determined in the dummy_test) and adds it to the sent dictionary (it becomes lowest row).
 
-    dummy_cost = 100 * max([costs[arc] for arc in costs]) # This sets the cost of the dummy at 100 times larger than the largest cost in the network (big M cost).
+    dummy_cost = 10 * find_max_cost(costs) # This sets the cost of the dummy at 100 times larger than the largest cost in the network (big M cost).
     
     for j in range(demand_size): # This for loop actually connects the dummy_cost to every demand in the dummy_supply row.
         costs[(supply_size, j)] = dummy_cost # And thus, all of the costs to send supply from this dummy supply are big M costs.
     
     costs[supply_size] = True # This adds one more item to the costs dictionary. This will allow us to remove the big M cost from the objective function later.
 
-    return costs, sent, dummy_size
+    supply_size += 1
+
+    return costs, sent, supply_size, demand_size
 
 def dummy_demand(costs: dict, sent: dict, supply_size, demand_size, dummy_size): # This will create a dummy demand in our network.
     sent[(supply_size - 1, demand_size)] = dummy_size # This takes the size of the dummy (determined in the dummy_test) and adds it to the sent dictionary (it becomes the rightmost column).
             #(The keys are the coordinates in the matrix)
-    dummy_cost = 100 * max([costs[arc] for arc in costs]) # This sets the cost of the dummy at 100 times larger than the largest cost in the network (big M cost).
+    dummy_cost = 10 * find_max_cost(costs) # This sets the cost of the dummy at 100 times larger than the largest cost in the network (big M cost).
     
     for i in range(supply_size): # This for loop actually connects the dummy_cost to every supply in the dummy_demand column.
         costs[(i, demand_size)] = dummy_cost # And thus, all of the costs to send supply to this dummy demand are big M costs.
     
     costs[demand_size] = False # This adds one more item to the costs dictionary. This will allow us to remove the big M cost from the objective function later.
 
-    return costs, sent, dummy_size
+    demand_size += 1
+
+    return costs, sent, supply_size, demand_size
 
 def dummy_test(supplies: list, demands: list, costs, sent): # This will test to see if there is a dummy supply/demand needed.
     supply = sum(supplies) # This changes the list of supplies sent into a total number of supplies available.
@@ -41,12 +56,19 @@ def dummy_test(supplies: list, demands: list, costs, sent): # This will test to 
     else: # Otherwise, the demand has to be greater than the supply, and thus create a dummy supply.
         return dummy_supply(costs, sent, supply_size, demand_size, demand - supply) # The last variable in this function (demand - supply) is the amount that the dummy supply needs to provice.
 
+def M_check(costs: dict):
+    max = find_max_cost(costs)
+    for arc in costs:
+        if costs[arc] == "M":
+            costs[arc] = max * 5
+    
+    return costs
+
 
 def initialization(supply_size, demand_size, supplies, demands, costs): # Initial Basic Feasible solution generator (using the NW Corner Method).
     sent = {} # Initialization of the dictionary that contains the amount of supply sent from source i to demand j
     supply_count = 0 # This is the supply coordinate that we start at. It will be updated as we look for our initial solution.
     demand_count = 0 # This is the demand coordinate that we start at. It will be updated as we look for our initial solution.
-    dummy_size = 0 # This will be updated if we need to use a dummy.
 
     while supply_count < supply_size and demand_count < demand_size: # This makes us continue to look for a solution until we get through the matrix.
         if supplies[supply_count] <= demands[demand_count]: # This checks to see if the supply from source i is less than the demand from demand j.
@@ -65,9 +87,12 @@ def initialization(supply_size, demand_size, supplies, demands, costs): # Initia
     if solutions: # If the dummy_test returns a value, then we go into this if statement.
         costs = solutions[0] # Sets the cost of the dummy.
         sent = solutions[1] 
-        dummy_size = solutions[2] # Sets the amount sent to or from the dummy.
+        supply_size = solutions[2]
+        demand_size = solutions[3]
 
-    return sent, costs, dummy_size
+    costs = M_check(costs)
+
+    return sent, costs, supply_size, demand_size
 
 def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict): # This function is used to find U and V.
     first_arc = (0,0)
@@ -104,6 +129,7 @@ def find_reduced_costs(costs: dict, U: list, V: list): # This will find the redu
 
     for i in range(len(U)):
         for j in range(len(V)):
+
             reduced_matrix[(i, j)] = costs[(i, j)] - U[i] - V[j]
 
     return reduced_matrix
@@ -219,23 +245,20 @@ def tuple_adder(tuple, amount): # Since computer science likes to start with 0, 
     return new_tuple
 
 def row_col_remover(sent: dict, costs, found): # This function allows us to remove a row or column from the final printout. It will be used to make sure that the dummy costs (if there are any), are not part of the final cost.
-    to_be_deleted = []
-    non_dummy_coord = None
+    dummy_amounts = {}
     if costs[found]:
         for arc in sent:
             if arc[0] == found:
-                non_dummy_coord = arc[1]
-                to_be_deleted.append(arc)
+                dummy_amounts[arc] = sent[arc]
     else:
         for arc in sent:
             if arc[1] == found:
-                non_dummy_coord = arc[0]
-                to_be_deleted.append(arc)
+                dummy_amounts[arc] = sent[arc]
 
-    for perishable in to_be_deleted:
+    for perishable in dummy_amounts:
         sent.pop(perishable)
 
-    return sent, found, costs[found], non_dummy_coord
+    return sent, found, costs[found], dummy_amounts
 
 def dummy_finder(sent, costs): # This will allow us to identify the dummy and later remove it from the final printout.
     found = None
@@ -253,7 +276,7 @@ def dummy_finder(sent, costs): # This will allow us to identify the dummy and la
 
 def transportation_algorithm(supply_size, demand_size, supplies, demands, costs): # Here is the actual algorithm function in all its glory.
 
-    sent, costs, dummy_size = initialization(supply_size, demand_size, supplies, demands, costs) # This will initialize the algorithm, giving a basic feasible solution using the NW corner method.
+    sent, costs, supply_size, demand_size = initialization(supply_size, demand_size, supplies, demands, costs) # This will initialize the algorithm, giving a basic feasible solution using the NW corner method.
     U, V = compound_var(supply_size, demand_size, sent, costs) # This finds the initial U and V. The way this function works, U_1 always = 0.
     
     reduced_matrix = find_reduced_costs(costs, U, V) # Taking the U's and V's, this function finds the reduced costs for the non-basic variables.
@@ -275,26 +298,30 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
         
     if sent[1]: # This section only happens if there is a dummy.
         if sent[2]: # If there is a dummy supply, this will let you know which demand won't get everything that they asked for.
-            print(f"Demand {sent[3] + 1} will not receive {dummy_size} units.")
+            for j in range(demand_size):
+                if (supply_size - 1, j) in sent[3].keys() and sent[3][(supply_size - 1, j)] > 0:
+                    print(f"Demand {j + 1} will not receive {sent[3][(supply_size - 1, j)]} units.")
         else: # If there is a dummy demand, this will let you know which supply won't send all of its units.
-            print(f"Supply {sent[3] + 1} will not send {dummy_size} units.")
+            for i in range(supply_size):
+                if (i, demand_size - 1) in sent[3].keys() and sent[3][(i, demand_size - 1)] > 0:
+                    print(f"Supply {i + 1} will not send {sent[3][(i, demand_size - 1)]} units.")
     return sorted_sent, total_cost
 
 
 if __name__=="__main__": # This is basically the way that python runs programs. When you run the program, everything in this section will happen.
     while True:
-        supply_size = input("Please enter number of supply rows: ") # User inputs the number of supply rows.
-        if type(supply_size) == int:
+        supply_size = input("Please enter number of supplies: ") # User inputs the number of supply rows.
+        try:
             supply_size = int(supply_size)
             break
-        else:
+        except:
             print("Oops! Please input integer.")
     while True:
-        demand_size = input("Please enter number of demand columns: ") # User inputs the number of demand columns.
-        if type(demand_size) == int:
+        demand_size = input("Please enter number of demands: ") # User inputs the number of demand columns.
+        try:
             demand_size = int(demand_size)
             break
-        else:
+        except:
             print("Oops! Please input integer.")
     supplies = [] # Sets up an empty list for the supply amounts.
     demands = [] # Sets up an empty list for the demand amounts.
@@ -302,17 +329,35 @@ if __name__=="__main__": # This is basically the way that python runs programs. 
 
     for i in range(supply_size): # This will continue until the supplies for each row have been inputted by the user.
         while True:
-            supply = input(f"Input supply for row {i+1}: ") # Asks the user to input the amount of supply at each source.
-            if type(supply) == int:
-                supplies.append(supply) # Adds that amount to the supplies list.
-                
+            supply = input(f"Input supply {i+1}: ") # Asks the user to input the amount of supply at each source.
+            try:
+                supplies.append(int(supply)) # Adds that amount to the supplies list.
+                break
+            except:
+                print("Oops! Please input an integer supply.")
 
     for j in range(demand_size): # This will continue until the demands for each column have been inputted by the user.
-        demand = int(input(f"Input demand for column {j+1}: ")) # Asks the user to input the requested supplies at each demand.
-        demands.append(demand) # Adds that amount to the demands list.
+        while True:
+            demand = input(f"Input demand {j+1}: ") # Asks the user to input the requested supplies at each demand.
+            try:
+                demands.append(int(demand)) # Adds that amount to the demands list.
+                break
+            except:
+                print("Oops! Please input an integer demand.")
+
+    print("Costs can be any number, but if a supply and demand are not connected, please press enter to move on.")
 
     for i in range(supply_size): # For every row...
         for j in range(demand_size): # Check every column...
-            costs[(i, j)] = int(input(f"Cost to move from supply {i+1} to demand {j+1}: ")) # And ask the user to input the cost to use the (i,j) path.
+            while True:
+                cost = input(f"Cost to move from supply {i+1} to demand {j+1}: ") # And ask the user to input the cost to use the (i,j) path.
+                try:
+                    costs[(i, j)] = float(cost)
+                    break
+                except:
+                    if cost == "":
+                        costs[(i, j)] = "M"
+                        break
+                    print("Oops! Please enter a valid cost.")
     print("({(i,j): amount sent from i to j, ... }, objective function total)")
     print(transportation_algorithm(supply_size, demand_size, supplies, demands, costs)) # Prints out our final result (see notes on transportation_algorithm for more details).
