@@ -299,5 +299,5 @@ if __name__=="__main__": # This is basically the way that python runs programs. 
     for i in range(supply_size): # For every row...
         for j in range(demand_size): # Check every column...
             costs[(i, j)] = int(input(f"Cost to move from supply {i+1} to demand {j+1}: ")) # And ask the user to input the cost to use the (i,j) path.
-
+    print("({(i,j): amount sent from i to j, ... }, objective function total)")
     print(transportation_algorithm(supply_size, demand_size, supplies, demands, costs)) # Prints out our final result (see notes on transportation_algorithm for more details).
