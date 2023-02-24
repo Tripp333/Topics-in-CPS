@@ -69,7 +69,7 @@ def initialization(supply_size, demand_size, supplies, demands, costs): # Initia
 
     return sent, costs, dummy_size
 
-def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict):
+def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict): # This function is used to find U and V.
     first_arc = (0,0)
     U = [0 for i in range(supply_size)]
     V = [0 for j in range(demand_size)]
@@ -82,7 +82,7 @@ def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict):
     return U, V
 
     
-def row_col_finder(arc: tuple, keys: list, costs: dict, supply_size, demand_size, U, V):
+def row_col_finder(arc: tuple, keys: list, costs: dict, supply_size, demand_size, U, V): # This basically allows us to step across the rows/columns. This will be used when finding U, V.
     for j in range(demand_size):
         new_arc = (arc[0], j)
         if new_arc in keys:
@@ -111,16 +111,16 @@ def find_reduced_costs(costs: dict, U: list, V: list): # This will find the redu
 def optimality_test(reduced_matrix: dict): # This will test to see if the reduced costs are optimal (all positive).
     minimum_reduced_cost = 0
     minimum_arc = (0, 0)
-    for reduced_arc in reduced_matrix.keys():
+    for reduced_arc in reduced_matrix.keys(): # Looks through the reduced costs to see if any of them are negative.
         if reduced_matrix[reduced_arc] < minimum_reduced_cost:
             minimum_reduced_cost = reduced_matrix[reduced_arc]
             minimum_arc = reduced_arc
-    if minimum_reduced_cost >= 0:
+    if minimum_reduced_cost >= 0: # If the minimum reduced is positive, then the solution is optimal.
         return True
     else:
-        return minimum_arc
+        return minimum_arc # Otherwise, we need to return the coordinates of the minimum reduced cost. This is the arc that will enter our tree.
 
-def find_row_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size):
+def find_row_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size): # This function will check the rows to see if there is a cycle. 
     if potential_arc in keys:
         keys.remove(potential_arc)
 
@@ -148,7 +148,7 @@ def find_row_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_a
 
     return True, cycle
 
-def find_col_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size):
+def find_col_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size): # This checks the columns to see if they are part of a cycle.
     if potential_arc in keys:
         keys.remove(potential_arc)
 
@@ -218,7 +218,7 @@ def tuple_adder(tuple, amount): # Since computer science likes to start with 0, 
     new_tuple = (tuple[0] + amount, tuple[1] + amount)
     return new_tuple
 
-def row_col_remover(sent: dict, costs, found):
+def row_col_remover(sent: dict, costs, found): # This function allows us to remove a row or column from the final printout. It will be used to make sure that the dummy costs (if there are any), are not part of the final cost.
     to_be_deleted = []
     non_dummy_coord = None
     if costs[found]:
@@ -251,53 +251,53 @@ def dummy_finder(sent, costs): # This will allow us to identify the dummy and la
             
 
 
-def transportation_algorithm(supply_size, demand_size, supplies, demands, costs):
+def transportation_algorithm(supply_size, demand_size, supplies, demands, costs): # Here is the actual algorithm function in all its glory.
 
-    sent, costs, dummy_size = initialization(supply_size, demand_size, supplies, demands, costs)
-    U, V = compound_var(supply_size, demand_size, sent, costs)
+    sent, costs, dummy_size = initialization(supply_size, demand_size, supplies, demands, costs) # This will initialize the algorithm, giving a basic feasible solution using the NW corner method.
+    U, V = compound_var(supply_size, demand_size, sent, costs) # This finds the initial U and V. The way this function works, U_1 always = 0.
     
-    reduced_matrix = find_reduced_costs(costs, U, V)
-    optimum = optimality_test(reduced_matrix)
+    reduced_matrix = find_reduced_costs(costs, U, V) # Taking the U's and V's, this function finds the reduced costs for the non-basic variables.
+    optimum = optimality_test(reduced_matrix) # Tests to see if the solution is optimal.
 
-    while optimum != True:
-        cycle = find_row_cycle([], list(sent.keys()), optimum, optimum, supply_size, demand_size, 0)
-        sent = enter_and_leave(sent, cycle, optimum)
-        U, V = compound_var(supply_size, demand_size, sent, costs)
-        reduced_matrix = find_reduced_costs(costs, U, V)
-        optimum = optimality_test(reduced_matrix)
+    while optimum != True: # If the solution is not optimal, follow the steps below.
+        cycle = find_row_cycle([], list(sent.keys()), optimum, optimum, supply_size, demand_size, 0) # Find a cycle.
+        sent = enter_and_leave(sent, cycle, optimum) # Find which one is going to enter (and leave) the solution path.
+        U, V = compound_var(supply_size, demand_size, sent, costs) # Finds our U's and V's.
+        reduced_matrix = find_reduced_costs(costs, U, V) # Finds the new reduced costs.
+        optimum = optimality_test(reduced_matrix) # Checks to see if the solution is optimal. If False, then the while loop continues.
 
-    sent = dummy_finder(sent, costs)
+    sent = dummy_finder(sent, costs) # Checks to see if we have a dummy supply/demand.
 
-    total_cost = find_total_cost(sent[0], costs)
+    total_cost = find_total_cost(sent[0], costs) # Finds our total cost.
     arcs = list(sent[0].keys())
     arcs.sort()
-    sorted_sent = {tuple_adder(i, 1): sent[0][i] for i in arcs}
+    sorted_sent = {tuple_adder(i, 1): sent[0][i] for i in arcs} # Updates the coordinates from starting at (0,0) to starting at (1,1)
         
-    if sent[1]:
-        if sent[2]:
+    if sent[1]: # This section only happens if there is a dummy.
+        if sent[2]: # If there is a dummy supply, this will let you know which demand won't get everything that they asked for.
             print(f"Demand {sent[3] + 1} will not receive {dummy_size} units.")
-        else:
+        else: # If there is a dummy demand, this will let you know which supply won't send all of its units.
             print(f"Supply {sent[3] + 1} will not send {dummy_size} units.")
     return sorted_sent, total_cost
 
 
-if __name__=="__main__":
-    supply_size = int(input("Please enter number of supplies: "))
-    demand_size = int(input("Please enter number of demands: "))
-    supplies = []
-    demands = []
-    costs = {}
+if __name__=="__main__": # This is basically the way that python runs programs. When you run the program, everything in this section will happen.
+    supply_size = int(input("Please enter number of supply rows: ")) # User inputs the number of supply rows.
+    demand_size = int(input("Please enter number of demand columns: ")) # User inputs the number of demand columns.
+    supplies = [] # Sets up an empty list for the supply amounts.
+    demands = [] # Sets up an empty list for the demand amounts.
+    costs = {} # Sets up an empty dictionary for the costs to take each path.
 
-    for i in range(supply_size):
-        supply = int(input(f"Input supply {i+1}: "))
-        supplies.append(supply)
+    for i in range(supply_size): # This will continue until the supplies for each row have been inputted by the user.
+        supply = int(input(f"Input supply for row {i+1}: ")) # Asks the user to input the amount of supply at each source.
+        supplies.append(supply) # Adds that amount to the supplies list.
 
-    for j in range(demand_size):
-        demand = int(input(f"Input demand {j+1}: "))
-        demands.append(demand)
+    for j in range(demand_size): # This will continue until the demands for each column have been inputted by the user.
+        demand = int(input(f"Input demand for column {j+1}: ")) # Asks the user to input the requested supplies at each demand.
+        demands.append(demand) # Adds that amount to the demands list.
 
-    for i in range(supply_size):
-        for j in range(demand_size):
-            costs[(i, j)] = int(input(f"Cost to move from supply {i+1} to demand {j+1}: "))
+    for i in range(supply_size): # For every row...
+        for j in range(demand_size): # Check every column...
+            costs[(i, j)] = int(input(f"Cost to move from supply {i+1} to demand {j+1}: ")) # And ask the user to input the cost to use the (i,j) path.
 
-    print(transportation_algorithm(supply_size, demand_size, supplies, demands, costs))
+    print(transportation_algorithm(supply_size, demand_size, supplies, demands, costs)) # Prints out our final result (see notes on transportation_algorithm for more details).
