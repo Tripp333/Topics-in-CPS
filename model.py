@@ -282,15 +282,30 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
 
 
 if __name__=="__main__": # This is basically the way that python runs programs. When you run the program, everything in this section will happen.
-    supply_size = int(input("Please enter number of supply rows: ")) # User inputs the number of supply rows.
-    demand_size = int(input("Please enter number of demand columns: ")) # User inputs the number of demand columns.
+    while True:
+        supply_size = input("Please enter number of supply rows: ") # User inputs the number of supply rows.
+        if type(supply_size) == int:
+            supply_size = int(supply_size)
+            break
+        else:
+            print("Oops! Please input integer.")
+    while True:
+        demand_size = input("Please enter number of demand columns: ") # User inputs the number of demand columns.
+        if type(demand_size) == int:
+            demand_size = int(demand_size)
+            break
+        else:
+            print("Oops! Please input integer.")
     supplies = [] # Sets up an empty list for the supply amounts.
     demands = [] # Sets up an empty list for the demand amounts.
     costs = {} # Sets up an empty dictionary for the costs to take each path.
 
     for i in range(supply_size): # This will continue until the supplies for each row have been inputted by the user.
-        supply = int(input(f"Input supply for row {i+1}: ")) # Asks the user to input the amount of supply at each source.
-        supplies.append(supply) # Adds that amount to the supplies list.
+        while True:
+            supply = input(f"Input supply for row {i+1}: ") # Asks the user to input the amount of supply at each source.
+            if type(supply) == int:
+                supplies.append(supply) # Adds that amount to the supplies list.
+                
 
     for j in range(demand_size): # This will continue until the demands for each column have been inputted by the user.
         demand = int(input(f"Input demand for column {j+1}: ")) # Asks the user to input the requested supplies at each demand.
