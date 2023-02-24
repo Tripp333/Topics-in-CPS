@@ -282,20 +282,20 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
 
 
 if __name__=="__main__": # This is basically the way that python runs programs. When you run the program, everything in this section will happen.
-    while True:
+    while True: # This is for error detection. It will check to see if the number of supplies input is an integer. 
         supply_size = input("Please enter number of supply rows: ") # User inputs the number of supply rows.
-        if type(supply_size) == int:
+        if type(supply_size) == int: # Checks to see if the input is an integer.
             supply_size = int(supply_size)
             break
         else:
-            print("Oops! Please input integer.")
-    while True:
+            print("Oops! Please input integer.") # If the input is not an integer, it will ask the user to re-input the the number of supplies.
+    while True: # This is for error detection. It will check to see if the number demands input is an integer. 
         demand_size = input("Please enter number of demand columns: ") # User inputs the number of demand columns.
-        if type(demand_size) == int:
+        if type(demand_size) == int: # Checks to see if the input is an integer.
             demand_size = int(demand_size)
             break
         else:
-            print("Oops! Please input integer.")
+            print("Oops! Please input integer.")# If the input is not an integer, it will ask the user to re-input the the number of demands.
     supplies = [] # Sets up an empty list for the supply amounts.
     demands = [] # Sets up an empty list for the demand amounts.
     costs = {} # Sets up an empty dictionary for the costs to take each path.
