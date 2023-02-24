@@ -311,17 +311,17 @@ def transportation_algorithm(supply_size, demand_size, supplies, demands, costs)
 if __name__=="__main__": # This is basically the way that python runs programs. When you run the program, everything in this section will happen.
     while True: # This is for error detection. It will check to see if the number of supplies input is an integer. 
         supply_size = input("Please enter number of supply rows: ") # User inputs the number of supply rows.
-        if type(supply_size) == int: 
+        try: 
             supply_size = int(supply_size)
             break
-        else:
+        except:
             print("Oops! Please input integer.")
     while True:
         demand_size = input("Please enter number of demand columns: ") # User inputs the number of demand columns.
-        if type(demand_size) == int:
+        try:
             demand_size = int(demand_size)
             break
-        else:
+        except:
             print("Oops! Please input integer.")
     supplies = [] # Sets up an empty list for the supply amounts.
     demands = [] # Sets up an empty list for the demand amounts.
@@ -359,5 +359,7 @@ if __name__=="__main__": # This is basically the way that python runs programs. 
                         costs[(i, j)] = "M"
                         break
                     print("Oops! Please enter a valid cost.")
+    
     print("({(i,j): amount sent from i to j, ... }, objective function total)")
+    
     print(transportation_algorithm(supply_size, demand_size, supplies, demands, costs)) # Prints out our final result (see notes on transportation_algorithm for more details).
