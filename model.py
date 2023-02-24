@@ -108,7 +108,7 @@ def find_reduced_costs(costs: dict, U: list, V: list): # This will find the redu
 
     return reduced_matrix
 
-def optimality_test(reduced_matrix: dict):
+def optimality_test(reduced_matrix: dict): # This will test to see if the reduced costs are optimal (all positive).
     minimum_reduced_cost = 0
     minimum_arc = (0, 0)
     for reduced_arc in reduced_matrix.keys():
@@ -177,8 +177,8 @@ def find_col_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_a
     return True, cycle
 
 
-def enter_and_leave(sent: dict, cycle: list, entering: tuple):
-    count = 0
+def enter_and_leave(sent: dict, cycle: list, entering: tuple): # This will let us know which coordinates are in the cycle. 
+    count = 0 #                    It will add or subract the or subtract the necessary value from the sent items in the cycle.
     odds = []
 
     sent[entering] = 0
@@ -206,15 +206,15 @@ def enter_and_leave(sent: dict, cycle: list, entering: tuple):
     return sent
 
 
-def find_total_cost(sent: dict, costs: dict):
-    total_cost = 0
+def find_total_cost(sent: dict, costs: dict): # This will find the final total cost of our objective function.
+    total_cost = 0 # Initially the cost is 0.
 
-    for key in sent.keys():
+    for key in sent.keys(): # This looks through the sent dictionary and basically does a sum-product.
         total_cost += sent[key] * costs[key]
 
-    return total_cost
+    return total_cost # Returns the final total cost.
 
-def tuple_adder(tuple, amount):
+def tuple_adder(tuple, amount): # Since computer science likes to start with 0, and we like to start with 1, this function fixes the coordinates to make them understandable to us.
     new_tuple = (tuple[0] + amount, tuple[1] + amount)
     return new_tuple
 
@@ -237,7 +237,7 @@ def row_col_remover(sent: dict, costs, found):
 
     return sent, found, costs[found], non_dummy_coord
 
-def dummy_finder(sent, costs):
+def dummy_finder(sent, costs): # This will allow us to identify the dummy and later remove it from the final printout.
     found = None
 
     for arc in costs:
