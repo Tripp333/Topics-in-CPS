@@ -44,28 +44,28 @@ def dummy_test(supplies: list, demands: list, costs, sent): # This will test to 
 
 def initialization(supply_size, demand_size, supplies, demands, costs): # Initial Basic Feasible solution generator (using the NW Corner Method).
     sent = {} # Initialization of the dictionary that contains the amount of supply sent from source i to demand j
-    supply_count = 0 #
-    demand_count = 0 #
-    dummy_size = 0 #
+    supply_count = 0 # This is the supply coordinate that we start at. It will be updated as we look for our initial solution.
+    demand_count = 0 # This is the demand coordinate that we start at. It will be updated as we look for our initial solution.
+    dummy_size = 0 # This will be updated if we need to use a dummy.
 
-    while supply_count < supply_size and demand_count < demand_size:
-        if supplies[supply_count] <= demands[demand_count]:
-            sent[(supply_count, demand_count)] = supplies[supply_count]
-            demands[demand_count] -= supplies[supply_count]
-            supplies[supply_count] = 0
-            supply_count += 1
+    while supply_count < supply_size and demand_count < demand_size: # This makes us continue to look for a solution until we get through the matrix.
+        if supplies[supply_count] <= demands[demand_count]: # This checks to see if the supply from source i is less than the demand from demand j.
+            sent[(supply_count, demand_count)] = supplies[supply_count] # This adds the amount of supply sent from source i to demand j to the sent dictionary. The "key" to the dictionary is a Tuple (i,j).
+            demands[demand_count] -= supplies[supply_count] # This updates the amount of demand at j be subtracting the supplies at i from the demand at j.
+            supplies[supply_count] = 0 # This updates the amount of supplies at i to 0.
+            supply_count += 1 # This moves us over to the next supply.
         else:
-            sent[(supply_count, demand_count)] = demands[demand_count]
-            supplies[supply_count] -= demands[demand_count]
-            demands[demand_count] = 0
-            demand_count += 1
+            sent[(supply_count, demand_count)] = demands[demand_count] # This sets the amount of supplies sent from i to the demand at j.
+            supplies[supply_count] -= demands[demand_count] # This reduces the supplies at i by the demand at j.
+            demands[demand_count] = 0 # This sets the demand at j to 0.
+            demand_count += 1 # This moves us over to the next demand.
 
-    solutions = dummy_test(supplies, demands, costs, sent)
+    solutions = dummy_test(supplies, demands, costs, sent) # A check to see if we actually need to add a dummy supply or demand.
 
-    if solutions:
-        costs = solutions[0]
-        sent = solutions[1]
-        dummy_size = solutions[2]
+    if solutions: # If the dummy_test returns a value, then we go into this if statement.
+        costs = solutions[0] # Sets the cost of the dummy.
+        sent = solutions[1] 
+        dummy_size = solutions[2] # Sets the amount sent to or from the dummy.
 
     return sent, costs, dummy_size
 
@@ -99,7 +99,7 @@ def row_col_finder(arc: tuple, keys: list, costs: dict, supply_size, demand_size
     
     return U, V
 
-def find_reduced_costs(costs: dict, U: list, V: list):
+def find_reduced_costs(costs: dict, U: list, V: list): # This will find the reduced costs for the non-basic variables.
     reduced_matrix = {}
 
     for i in range(len(U)):
