@@ -108,17 +108,17 @@ def compound_var(supply_size: int, demand_size: int, sent: dict, costs: dict): #
 
     
 def row_col_finder(arc: tuple, keys: list, costs: dict, supply_size, demand_size, U, V): # This basically allows us to step across the rows/columns. This will be used when finding U, V.
-    for j in range(demand_size):
+    for j in range(demand_size): # searches the rows for arcs in sent
         new_arc = (arc[0], j)
         if new_arc in keys:
-            V[j] = costs[new_arc] - U[arc[0]]
+            V[j] = costs[new_arc] - U[arc[0]] # uses formula to find next V
             keys.remove(new_arc)
             U, V = row_col_finder(new_arc, keys, costs, supply_size, demand_size, U, V)
 
-    for i in range(supply_size):
-        new_arc = (i, arc[1])
+    for i in range(supply_size): # searches the columns for arcs in sent
+        new_arc = (i, arc[1]) 
         if new_arc in keys:
-            U[i] = costs[new_arc] - V[arc[1]]
+            U[i] = costs[new_arc] - V[arc[1]] # uses formula to find next U
             keys.remove(new_arc)
             U, V = row_col_finder(new_arc, keys, costs, supply_size, demand_size, U, V)
     
@@ -147,52 +147,52 @@ def optimality_test(reduced_matrix: dict): # This will test to see if the reduce
         return minimum_arc # Otherwise, we need to return the coordinates of the minimum reduced cost. This is the arc that will enter our tree.
 
 def find_row_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size): # This function will check the rows to see if there is a cycle. 
-    if potential_arc in keys:
+    if potential_arc in keys: # so the potential arc doesn't detect itself
         keys.remove(potential_arc)
 
 
-    for j in range(demand_size):
+    for j in range(demand_size): # checks the row to see if the original arc is there
         new_row_arc = (potential_arc[0], j)
-        if new_row_arc == original_min_arc and cycle_size > 1:
+        if new_row_arc == original_min_arc and cycle_size > 1: # added > 1 just so the cycle has to be bigger than 2
             cycle.append(potential_arc)
             return cycle
     
-    for j in range(demand_size):
+    for j in range(demand_size): # checks the row for arcs in the keys
         new_arc = (potential_arc[0], j)
         if new_arc in keys and new_arc != potential_arc:
             cycle.append(potential_arc)
             cycle_size += 1
-            keys.append(potential_arc)
-            cycle = find_col_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size)
-            if cycle[0] == True:
+            keys.append(potential_arc) # adds the potential arc back to the keys, so if the next arc hits a dead end it can come back
+            cycle = find_col_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size) # recurses
+            if cycle[0] == True: # if the cycle is from a dead end
                 keys.remove(potential_arc)
                 cycle[1].remove(potential_arc)
                 cycle_size -= 1
                 cycle = cycle[1]
-            else:
+            else: 
                 return cycle
 
     return True, cycle
 
 def find_col_cycle(cycle: list, keys: list, original_min_arc: tuple, potential_arc: tuple, supply_size, demand_size, cycle_size): # This checks the columns to see if they are part of a cycle.
-    if potential_arc in keys:
+    if potential_arc in keys: # so the potential arc doesn't detect itself
         keys.remove(potential_arc)
 
-    for i in range(supply_size):
+    for i in range(supply_size): # checks the column to see if the original arc is there
         new_col_arc = (i, potential_arc[1])
         if new_col_arc == original_min_arc and cycle_size > 1:
             cycle.append(potential_arc)
             return cycle
 
-    for i in range(supply_size):
+    for i in range(supply_size): # checks the row for arcs in the keys
         new_arc = (i, potential_arc[1])
         if new_arc in keys and new_arc != potential_arc:
             keys.remove(new_arc)
-            cycle.append(potential_arc)
+            cycle.append(potential_arc) 
             cycle_size += 1
-            keys.append(potential_arc)
+            keys.append(potential_arc) # adds the potential arc back to the keys, so if the next arc hits a dead end it can come back
             cycle = find_row_cycle(cycle, keys, original_min_arc, new_arc, supply_size, demand_size, cycle_size)
-            if cycle[0] == True:
+            if cycle[0] == True: # if the cycle is from a dead end
                 keys.remove(potential_arc)
                 cycle[1].remove(potential_arc)
                 cycle_size -= 1
@@ -207,14 +207,14 @@ def enter_and_leave(sent: dict, cycle: list, entering: tuple): # This will let u
     count = 0 #                    It will add or subract the or subtract the necessary value from the sent items in the cycle.
     odds = []
 
-    sent[entering] = 0
+    sent[entering] = 0 # adds the entering arc to the sent
 
-    for k in range(len(cycle)):
+    for k in range(len(cycle)): # finds odd and even memmbers of the cycle
         if k % 2 == 1:
             odds.append(cycle[k])
 
-    minimum_odd = max([sent[arc] for arc in odds])
-    leaving = ()
+    minimum_odd = max([sent[arc] for arc in odds]) # sets the smallest value as the largest value in the set
+    leaving = () # coords of the leaving arc
     for arc in odds:
         if sent[arc] <= minimum_odd:
             minimum_odd = sent[arc]
@@ -227,7 +227,7 @@ def enter_and_leave(sent: dict, cycle: list, entering: tuple): # This will let u
             sent[arc] -= minimum_odd
         count += 1
 
-    sent.pop(leaving)
+    sent.pop(leaving) # removes the leaving arc from the sent
 
     return sent
 
@@ -255,8 +255,8 @@ def row_col_remover(sent: dict, costs, found): # This function allows us to remo
             if arc[1] == found:
                 dummy_amounts[arc] = sent[arc]
 
-    for perishable in dummy_amounts:
-        sent.pop(perishable)
+    for perishable in dummy_amounts: # removes the dummy row or column from the sent
+            sent.pop(perishable)
 
     return sent, found, costs[found], dummy_amounts
 
@@ -264,7 +264,7 @@ def dummy_finder(sent, costs): # This will allow us to identify the dummy and la
     found = None
 
     for arc in costs:
-        if type(arc) != tuple:
+        if type(arc) != tuple: # checks for row or column identifier
             found = arc
 
     if found:
