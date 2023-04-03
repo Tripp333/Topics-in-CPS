@@ -58,9 +58,11 @@ def gradient_search(variables, function, current):
     if len(t_star) > 1:
         optimal = 0
         for t in t_star:
-            if (stepping_function.subs(t_var, t), stepping_function.subs(t_var, optimal)):
-                optimal = t
-    
+            if stepping_function.subs(t_var, t).is_real:
+                if stepping_function.subs(t_var, t) > stepping_function.subs(t_var, optimal):
+                    optimal = t
+        t_star = optimal
+
 
     return t_star
 
