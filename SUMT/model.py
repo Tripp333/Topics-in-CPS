@@ -1,5 +1,6 @@
 import math
 from sympy import *
+from random import *
 
 input_fnctn = "2*x-x**2+3*y-y**2-1/(2-x-y)-1/x-1/y"
 
@@ -24,31 +25,53 @@ def function_eval(function, variables, point):
     return output
 
 
+def initial_mover(constraint, variables, initial, epsilon, t_var):
+    gradient = gradient_gen(variables, constraint)
+    num_grad = gradient_eval(variables, gradient, initial)
+    stepping_function = stepping_function_gen(num_grad, constraint)
+    t_star = solveset(Eq(stepping_function, epsilon), t_var)
+    
+    minimum = t_star.args[0]
+    
+    if len(t_star) > 1:
+        for t in t_star:
+            if stepping_function.subs(t_var, t) < stepping_function.subs(t_var, minimum):
+                minimum = t
+
+    for var in variables:
+        initial[var] += num_grad[var] * minimum
+
+    return initial
+
+
 def initialization(constraints, variables, epsilon):
     count = 0
+    feasibility_count = 0
     initial = {}
     t_var = Symbol("t_var")
 
     for var in variables:
-        initial[var] = 1
+        initial[var] = random()
 
     while True:
+        if count == len(constraints):
+            break
+
         constraint = constraints[count]
         constriction = function_eval(constraint, variables, initial)
+        count += 1
+        feasibility_count += 1
+
+        if feasibility_count > len(constraints)*99:
+            break
+
         if constriction > 0:
             continue
         else:
-            gradient = gradient_gen(variables, constraint)
-            num_grad = gradient_eval(variables, gradient, initial)
-            stepping_function = stepping_function_gen(num_grad, constraint)
-            t_star = solveset(Eq(stepping_function, epsilon), t_var)
-            
-            minimum = t_star.args[0]
-            
-            if len(t_star) > 1:
-                for t in t_star:
-                    if stepping_function.subs(t_var, t) < stepping_function.subs(t_var, minimum):
-                        minimum = t
+            initial = initial_mover(constraint, variables, initial, epsilon, t_var)
+            count = 0
+
+    return initial
 
 
 def gradient_gen(variables, function):
@@ -127,4 +150,5 @@ def gradient_search(variables, function, current, epsilon):
 n = gradient_search(variables, par, current, 0.01)
     
 print(n)
+
 
