@@ -3,24 +3,22 @@ from sympy import *
 from random import *
 
 input_fnctn = "2*x-x**2+3*y-y**2-1/(2-x-y)-1/x-1/y"
+constraint_fnctns = ["x+y-5", "5-x", "5-y"]
 
 par = parse_expr(input_fnctn)
 
+constraints = []
 
+for constraint in constraint_fnctns:
+    constraints.append(parse_expr(constraint))
 
 variables = par.free_symbols
-current = {}
 
-for var in variables:
-    current[var] = .5
 
 def function_eval(function, variables, point):
     output = function
     for v in variables:
-            try:
-                output = output.subs(v, point[v])
-            except:
-                pass
+            output = output.subs(v, point[v])
 
     return output
 
@@ -28,7 +26,7 @@ def function_eval(function, variables, point):
 def initial_mover(constraint, variables, initial, epsilon, t_var):
     gradient = gradient_gen(variables, constraint)
     num_grad = gradient_eval(variables, gradient, initial)
-    stepping_function = stepping_function_gen(num_grad, constraint)
+    stepping_function = stepping_function_gen(initial, num_grad, constraint)
     t_star = solveset(Eq(stepping_function, epsilon), t_var)
     
     minimum = t_star.args[0]
@@ -91,7 +89,7 @@ def gradient_eval(variables, gradient, current):
     return num_grad
 
 
-def stepping_function_gen(num_grad, function):
+def stepping_function_gen(current, num_grad, function):
     new_sol = {}
     t_var = Symbol("t_var")
 
@@ -140,15 +138,112 @@ def gradient_search(variables, function, current, epsilon):
     if stop:
         return current
     
-    stepping_function = stepping_function_gen(num_grad, function)
+    stepping_function = stepping_function_gen(current, num_grad, function)
 
     current = mover_function(variables, num_grad, current, stepping_function)
 
     return gradient_search(variables, function, current, epsilon)
 
+n = initialization(constraints, variables, 0.01)
 
-n = gradient_search(variables, par, current, 0.01)
+
+def constraint_gen(variables):
+    while True:
+        num_constraints = input("Please input number of constraints: ")
+
+        try:
+            num_constraints = int(num_constraints)
+        except:
+            print("Please input an integer value.")
+            continue
+
+        break
+
+    print("Please input constraints of the form:")
+    print("g(x) INEQUALITY constant")
+
+    constraints = []
+
+    for i in range(int(num_constraints)):
+        while True:
+            inequality = input()
+            split_ineq = inequality.split(" ")
+
+            if len(split_ineq) != 3:
+                print("Please input constraint function of a valid form.")
+                continue
+
+            LHS = split_ineq[0]
+            INEQUALITY = split_ineq[1]
+            RHS = split_ineq[2]
+
+            try:
+                RHS = float(RHS)
+            except:
+                print("Please input constraint function of a valid form.")
+                continue
+
+            try:
+                LHS = parse_expr(LHS)
+            except:
+                print("Please input constraint function of a valid form.")
+                continue
+
+            if INEQUALITY == '<' or INEQUALITY == '<=':
+                constraint = RHS - LHS
+
+            elif INEQUALITY == '>' or INEQUALITY == '>=':
+                constraint = LHS - RHS
+
+            else:
+                print("Please input constraint function of a valid form.")
+                continue
+
+            break
+
+        constraints.append(constraint)
+
+    for var in variables:
+        if var not in constraints:
+            constraints.append(var)
+
+    return constraints
+
+
+if __name__ == '__main__':
+    print("Exponentials should be of the form a**b, multiplication should use the * symbol, and quotient denominators should be put in parenthesis.")
     
-print(n)
+    while True:
+        objective = input("Please input objective function: ")
+        
+        try:
+            objective = parse_expr(objective)
+        except:
+            print("Please input objective function of a valid form.")
+            continue
 
+        break
 
+    variables = objective.free_symbols
+    
+    constraints = constraint_gen(variables)
+
+    while True:
+        epsilon = input("Default accepted error is 0.01. If a different one is needed, please input now. Otherwise press return: ")
+
+        if epsilon == '':
+            epsilon = 0.01
+
+        else:
+            try:
+                epsilon = float(epsilon)
+            except:
+                print("Please input a valid error value.")
+                continue
+
+        break
+
+    initial = initialization(constraints, variables, epsilon)
+    print(initial)
+
+    
