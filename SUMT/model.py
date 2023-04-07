@@ -2,19 +2,6 @@ import math
 from sympy import *
 from random import *
 
-input_fnctn = "2*x-x**2+3*y-y**2-1/(2-x-y)-1/x-1/y"
-constraint_fnctns = ["x+y-5", "5-x", "5-y"]
-
-par = parse_expr(input_fnctn)
-
-constraints = []
-
-for constraint in constraint_fnctns:
-    constraints.append(parse_expr(constraint))
-
-variables = par.free_symbols
-
-
 def function_eval(function, variables, point):
     output = function
     for v in variables:
@@ -27,7 +14,7 @@ def initial_mover(constraint, variables, initial, epsilon, t_var):
     gradient = gradient_gen(variables, constraint)
     num_grad = gradient_eval(variables, gradient, initial)
     stepping_function = stepping_function_gen(initial, num_grad, constraint)
-    t_star = solveset(Eq(stepping_function, epsilon), t_var)
+    t_star = solveset(Eq(stepping_function, 99*epsilon), t_var)
     
     minimum = t_star.args[0]
     
@@ -61,7 +48,8 @@ def initialization(constraints, variables, epsilon):
         feasibility_count += 1
 
         if feasibility_count > len(constraints)*99:
-            break
+            print("No feasible region available.")
+            return None
 
         if constriction > 0:
             continue
@@ -134,7 +122,6 @@ def gradient_search(variables, function, current, epsilon):
     for var in variables:
         if abs(num_grad[var]) > epsilon:
             stop = False
-        print(num_grad[var])
     if stop:
         return current
     
@@ -143,8 +130,6 @@ def gradient_search(variables, function, current, epsilon):
     current = mover_function(variables, num_grad, current, stepping_function)
 
     return gradient_search(variables, function, current, epsilon)
-
-n = initialization(constraints, variables, 0.01)
 
 
 def constraint_gen(variables):
@@ -210,6 +195,44 @@ def constraint_gen(variables):
     return constraints
 
 
+def p_function_gen(constraints, objective, r_value):
+    p_function = objective
+
+    for constraint in constraints:
+        p_function -= r_value/constraint
+
+    return p_function
+
+
+def distance_traveled(variables, current, next):
+    square_length = 0
+
+    for var in variables:
+        square_length += (current[var] - next[var])**2
+
+    length = sqrt(square_length)
+
+    return length
+
+
+def SUMT(variables, epsilon, current, constraints, objective):
+    r_value = 1
+    p_function = p_function_gen(constraints, objective, r_value)
+
+    while True:
+        next = gradient_search(variables, p_function, current, epsilon)
+
+        if distance_traveled(variables, current, next) < epsilon:
+            current = next
+            break
+
+        r_value = r_value * 0.01
+        p_function = p_function_gen(constraints, objective, r_value)
+        current = next
+
+    return current
+
+
 if __name__ == '__main__':
     print("Exponentials should be of the form a**b, multiplication should use the * symbol, and quotient denominators should be put in parenthesis.")
     
@@ -244,6 +267,11 @@ if __name__ == '__main__':
         break
 
     initial = initialization(constraints, variables, epsilon)
-    print(initial)
+
+    if initial != None:
+        solution = SUMT(variables, epsilon, initial, constraints, objective)
+        print(solution)
+
+
 
     
