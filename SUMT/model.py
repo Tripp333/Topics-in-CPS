@@ -1,9 +1,14 @@
+# Topics in Optimization: 
+# Computational Project 2: The SUMT Algorithm
+# Tripp Lawrence and Luke Lewis
+# 04/10/2023
+
 import math
 from sympy import *
 from random import *
 
-def function_eval(function, variables, point):
-    output = function
+def function_eval(function, variables, point): # This function takes in an expression, the variables in that expression, and a specific point.
+    output = function                           # It then evaluates the expression at that point and returns the expression.
     for v in variables:
             output = output.subs(v, point[v])
 
