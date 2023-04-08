@@ -12,9 +12,9 @@ def function_eval(function, variables, point):
 
 def initial_mover(constraint, variables, initial, epsilon, t_var):
     gradient = gradient_gen(variables, constraint)
-    num_grad = gradient_eval(variables, gradient, initial)
-    stepping_function = stepping_function_gen(initial, num_grad, constraint)
-    t_star = solveset(Eq(stepping_function, 99*epsilon), t_var)
+    num_grad = gradient_eval(variables, gradient, initial, epsilon)
+    stepping_function = stepping_function_gen(initial, num_grad, constraint, variables)
+    t_star = solveset(Eq(stepping_function, epsilon), t_var)
     
     minimum = t_star.args[0]
     
@@ -57,27 +57,41 @@ def initialization(constraints, variables, epsilon):
             initial = initial_mover(constraint, variables, initial, epsilon, t_var)
             count = 0
 
+    print(initial)
     return initial
 
 
 def gradient_gen(variables, function):
     gradient = {}
     for var in variables:
-        gradient[var] = diff(function, var)
+        gradient[var] = function.diff(var)
 
     return gradient
 
 
-def gradient_eval(variables, gradient, current):
+def constraint_check(constraints, solution, variables):
+    feasible = True
+    for constraint in constraints:
+        if function_eval(constraint, variables, solution) <= 0:
+            feasible = False
+
+    return feasible
+
+
+def gradient_eval(variables, gradient, current, epsilon):
     num_grad = {}
 
     for var in variables:
-        num_grad[var] = function_eval(gradient[var], variables, current)
+        grad = function_eval(gradient[var], variables, current)
+        if abs(grad) < epsilon:
+            num_grad[var] = 0
+        else:
+            num_grad[var] = grad
 
     return num_grad
 
 
-def stepping_function_gen(current, num_grad, function):
+def stepping_function_gen(current, num_grad, function, variables):
     new_sol = {}
     t_var = Symbol("t_var")
 
@@ -92,20 +106,33 @@ def stepping_function_gen(current, num_grad, function):
     return stepping_function
 
 
-def mover_function(variables, num_grad, current, stepping_function):
+def mover_function(variables, num_grad, current, stepping_function, constraints):
     t_var = Symbol("t_var")
     t_step = stepping_function.diff(t_var)
     t_star = solveset(t_step, t_var)
+
+    potential = {}
+
+    for var in variables:
+        potential[var] = 0
 
     if len(t_star) > 1:
         optimal = 0
         for t in t_star:
             if stepping_function.subs(t_var, t).is_real:
                 if stepping_function.subs(t_var, t) > stepping_function.subs(t_var, optimal):
-                    optimal = t
-        t_star = optimal
+                    for var in variables:
+                        potential[var] = current[var] + t * num_grad[var]
+                    
+                    if constraint_check(constraints, potential, variables):
+                        optimal = t
+
+                    for var in variables:
+                        potential[var] = 0
+
+        t_star = float(optimal)
     else:
-        t_star = t_star.args[0]
+        t_star = float(t_star.args[0])
 
     for var in variables:
         current[var] += t_star * num_grad[var]
@@ -113,10 +140,14 @@ def mover_function(variables, num_grad, current, stepping_function):
     return current
 
 
-def gradient_search(variables, function, current, epsilon):
+def gradient_search(variables, function, current, epsilon, constraints, r_value):
     gradient = gradient_gen(variables, function)
+    next = {}
+    
+    for I in current:
+        next[I] = float(f"{current[I]}")  
 
-    num_grad = gradient_eval(variables, gradient, current)
+    num_grad = gradient_eval(variables, gradient, current, epsilon)
     
     stop = True
     for var in variables:
@@ -125,11 +156,16 @@ def gradient_search(variables, function, current, epsilon):
     if stop:
         return current
     
-    stepping_function = stepping_function_gen(current, num_grad, function)
+    stepping_function = stepping_function_gen(next, num_grad, function, variables)
+    next = mover_function(variables, num_grad, next, stepping_function, constraints)
 
-    current = mover_function(variables, num_grad, current, stepping_function)
+    for var in variables:
+        if distance_traveled(variables, current, next) < epsilon * (r_value + epsilon):
+            return next
 
-    return gradient_search(variables, function, current, epsilon)
+    print(next)
+
+    return gradient_search(variables, function, next, epsilon, constraints, r_value)
 
 
 def constraint_gen(variables):
@@ -220,7 +256,7 @@ def SUMT(variables, epsilon, current, constraints, objective):
     p_function = p_function_gen(constraints, objective, r_value)
 
     while True:
-        next = gradient_search(variables, p_function, current, epsilon)
+        next = gradient_search(variables, p_function, current, epsilon, constraints, r_value)
 
         if distance_traveled(variables, current, next) < epsilon:
             current = next
@@ -229,6 +265,7 @@ def SUMT(variables, epsilon, current, constraints, objective):
         r_value = r_value * 0.01
         p_function = p_function_gen(constraints, objective, r_value)
         current = next
+        print(current)
 
     return current
 
@@ -265,8 +302,10 @@ if __name__ == '__main__':
                 continue
 
         break
-
+    x = Symbol('x')
+    y = Symbol('y')
     initial = initialization(constraints, variables, epsilon)
+    # initial = {x:1,y:1}
 
     if initial != None:
         solution = SUMT(variables, epsilon, initial, constraints, objective)
@@ -274,4 +313,16 @@ if __name__ == '__main__':
 
 
 
-    
+# functin = "x*y-1/(-x**2-y+3)-1/x-1/y"
+
+# func = parse_expr(functin)
+
+# gradient = gradient_gen(func.free_symbols, func)
+
+# print(gradient)
+
+# x = Symbol('x')
+# y = Symbol('y')
+# initial = {x:1,y:1}
+
+# print(gradient_search([x,y], x*y-1/(3-x**2-y)-1/x-1/y, initial, 0.01, [3-x**2-y, x, y]))
