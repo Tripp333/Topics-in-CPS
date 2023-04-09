@@ -1,0 +1,42 @@
+# Topics in Optimization: 
+# Computational Project 2: The SUMT Algorithm
+# Tripp Lawrence and Luke Lewis
+# 04/10/2023
+
+In the code file, the functions are in the following order:
+
+
+    function_eval(function, variables, point)
+
+    initial_mover(constraint, variables, initial, epsilon, t_var)
+
+    initialization(constraints, variables, epsilon)
+
+    gradient_gen(variables, function)
+
+    constraint_check(constraints, solution, variables)
+
+    gradient_eval(variables, gradient, current, epsilon)
+
+    stepping_function_gen(current, num_grad, function, variables)
+
+    mover_function(variables, num_grad, current, stepping_function, constraints)
+
+    gradient_search(variables, function, current, epsilon, constraints, r_value)
+
+    constraint_gen(variables)
+
+    p_function_gen(constraints, objective, r_value)
+
+    distance_traveled(variables, current, next)
+
+    SUMT(variables, epsilon, current, constraints, objective)
+
+The program has three main parts:
+    Initialization of intial solution
+    The Gradient Method to find the optimal solution for that function
+    The SUMT Algorithm which updates the function by changing the r_value
+
+In python, you have to go to the bottom of the file to see where the program actually runs.
+The program starts where the line "if __name__ == '__main__':" is.
+

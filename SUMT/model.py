@@ -96,8 +96,8 @@ def gradient_eval(variables, gradient, current, epsilon): # This function takes 
     return num_grad
 
 
-def stepping_function_gen(current, num_grad, function, variables):
-    new_sol = {}
+def stepping_function_gen(current, num_grad, function, variables): # This function takes the current solution, and the gradient evaluated at that point, and creates a function in terms of one variable.
+    new_sol = {}  #  This function will be able to be used later to determine how many "steps" to take in the direction of the gradient.
     t_var = Symbol("t_var")
 
     for var in current:
@@ -111,10 +111,10 @@ def stepping_function_gen(current, num_grad, function, variables):
     return stepping_function
 
 
-def mover_function(variables, num_grad, current, stepping_function, constraints):
+def mover_function(variables, num_grad, current, stepping_function, constraints): # This function is what moves the point toward the optimal point for the Gradient search algorithm.
     t_var = Symbol("t_var")
     t_step = stepping_function.diff(t_var)
-    t_star = solveset(t_step, t_var)
+    t_star = solveset(t_step, t_var) # This finds the t values that are potential optimums.
 
     potential = {}
 
@@ -124,7 +124,7 @@ def mover_function(variables, num_grad, current, stepping_function, constraints)
     if len(t_star) > 1:
         optimal = 0
         for t in t_star:
-            if stepping_function.subs(t_var, t).is_real:
+            if stepping_function.subs(t_var, t).is_real: # This throws out any t's that are not real.
                 if stepping_function.subs(t_var, t) > stepping_function.subs(t_var, optimal):
                     for var in variables:
                         potential[var] = current[var] + t * num_grad[var]
@@ -145,7 +145,7 @@ def mover_function(variables, num_grad, current, stepping_function, constraints)
     return current
 
 
-def gradient_search(variables, function, current, epsilon, constraints, r_value):
+def gradient_search(variables, function, current, epsilon, constraints, r_value): # This is the Gradient search algorthm. It will run until it finds an optimal solution.
     gradient = gradient_gen(variables, function)
     next = {}
     
@@ -155,7 +155,7 @@ def gradient_search(variables, function, current, epsilon, constraints, r_value)
     num_grad = gradient_eval(variables, gradient, current, epsilon)
     
     stop = True
-    for var in variables:
+    for var in variables: # This is the optimality check for the Gradient search algorithm.
         if abs(num_grad[var]) > epsilon:
             stop = False
     if stop:
@@ -173,21 +173,22 @@ def gradient_search(variables, function, current, epsilon, constraints, r_value)
     return gradient_search(variables, function, next, epsilon, constraints, r_value)
 
 
-def constraint_gen(variables):
+def constraint_gen(variables): # This function prompts the user to enter the constraint equations. 
     while True:
         num_constraints = input("Please input number of constraints: ")
 
         try:
-            num_constraints = int(num_constraints)
-        except:
+            num_constraints = int(num_constraints) # This tests to see if the user actually told us the total number of constraint equations.
+        except: # If tat value is not an integer, then they are prompted to put in an integer.
             print("Please input an integer value.")
             continue
 
         break
 
     print("Please input constraints of the form:")
-    print("g(x) INEQUALITY constant")
-
+    print("g(x) INEQUALITY constant") # This is telling the user exactly how the constraint equations need to be entered. 
+# The " " between the constraint, the inequality symbol, and the constant is very important. Since that is how the program distinguishes between them.
+# Though there is error handling built in below to help if someone inputs constraints in the wrong form.
     constraints = []
 
     for i in range(int(num_constraints)):
@@ -195,7 +196,7 @@ def constraint_gen(variables):
             inequality = input()
             split_ineq = inequality.split(" ")
 
-            if len(split_ineq) != 3:
+            if len(split_ineq) != 3: # There aren't three parts after the inequality is split, then the user is prompted to correct the formatting of their constraint.
                 print("Please input constraint function of a valid form.")
                 continue
 
@@ -204,15 +205,15 @@ def constraint_gen(variables):
             RHS = split_ineq[2]
 
             try:
-                RHS = float(RHS)
+                RHS = float(RHS) # This checks the right hand side of the inequality to see if it can be made into a number.
             except:
-                print("Please input constraint function of a valid form.")
+                print("Please input constraint function of a valid form.") # If not, it again prompts the user to correct their input.
                 continue
 
             try:
-                LHS = parse_expr(LHS)
+                LHS = parse_expr(LHS) # This checks to see if g(x) is in the correct format.
             except:
-                print("Please input constraint function of a valid form.")
+                print("Please input constraint function of a valid form.") # Again, prompts user for correct input.
                 continue
 
             if INEQUALITY == '<' or INEQUALITY == '<=':
@@ -236,7 +237,7 @@ def constraint_gen(variables):
     return constraints
 
 
-def p_function_gen(constraints, objective, r_value):
+def p_function_gen(constraints, objective, r_value): # This function generates the P(x;r) that is used by the SUMT algorithm.
     p_function = objective
 
     for constraint in constraints:
@@ -245,7 +246,8 @@ def p_function_gen(constraints, objective, r_value):
     return p_function
 
 
-def distance_traveled(variables, current, next):
+def distance_traveled(variables, current, next): # This function is part of the check to see if the solution found is optimal.
+    # It checks to see how far the solution point moved from one iteration to the next. Although, technically, it just finds the distance between two points.
     square_length = 0
 
     for var in variables:
@@ -256,7 +258,7 @@ def distance_traveled(variables, current, next):
     return length
 
 
-def SUMT(variables, epsilon, current, constraints, objective):
+def SUMT(variables, epsilon, current, constraints, objective): # This function performs the SUMT algorithm.
     r_value = 1
     p_function = p_function_gen(constraints, objective, r_value)
 
@@ -277,19 +279,19 @@ def SUMT(variables, epsilon, current, constraints, objective):
 
 if __name__ == '__main__':
     print("Exponentials should be of the form a**b, multiplication should use the * symbol, and quotient denominators should be put in parenthesis.")
-    
+    # The user has to be very particular with how they input the objective function. This is because of how python handles exponentiation, multiplication, and division. 
     while True:
         objective = input("Please input objective function: ")
         
         try:
-            objective = parse_expr(objective)
+            objective = parse_expr(objective) # This checks to see if the objective function is in the correct format.
         except:
-            print("Please input objective function of a valid form.")
+            print("Please input objective function of a valid form.") # If it is not, then the user is prompted to enter the objective function again, but in the correct format.
             continue
 
         break
 
-    variables = objective.free_symbols
+    variables = objective.free_symbols # This operation looks in the objective function, and finds the variables.
     
     constraints = constraint_gen(variables)
 
