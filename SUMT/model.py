@@ -34,7 +34,7 @@ def initial_mover(constraint, variables, initial, epsilon, t_var):
     return initial
 
 
-def initialization(constraints, variables, epsilon):
+def initialization(constraints, variables, epsilon): # This function finds an initial solution that is not on the boundary of the constraints.
     count = 0
     feasibility_count = 0
     initial = {}
@@ -66,7 +66,7 @@ def initialization(constraints, variables, epsilon):
     return initial
 
 
-def gradient_gen(variables, function):
+def gradient_gen(variables, function): # This function takes the gradient of an expression and stores the results in a dictionary.
     gradient = {}
     for var in variables:
         gradient[var] = function.diff(var)
@@ -83,14 +83,14 @@ def constraint_check(constraints, solution, variables):
     return feasible
 
 
-def gradient_eval(variables, gradient, current, epsilon):
+def gradient_eval(variables, gradient, current, epsilon): # This function takes in the gradient, evaluates it at a point, and returns a dictionary of the results.
     num_grad = {}
 
     for var in variables:
         grad = function_eval(gradient[var], variables, current)
-        if abs(grad) < epsilon:
-            num_grad[var] = 0
-        else:
+        if abs(grad) < epsilon: # We had to add this check in place, that replaces sufficiently small values with 0.
+            num_grad[var] = 0 # This is because it would mess up taking derivatives when the values was really close to zero.
+        else: # Unfortunately, this does affect the accuracy, though the algorithm still converges to the correct values.
             num_grad[var] = grad
 
     return num_grad
