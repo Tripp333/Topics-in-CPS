@@ -40,3 +40,10 @@ The program has three main parts:
 In python, you have to go to the bottom of the file to see where the program actually runs.
 The program starts where the line "if __name__ == '__main__':" is.
 
+
+
+The various solution files are to show some of the various functionality of this program.
+    input1.txt/output1.txt  - This contains a basic objective function that was a class example.
+    input2.txt/output2.txt - This is the same example as the function above, but the epsilon has been changed to a smaller value (to show the increase in accuracy).
+    input3.txt/output3.txt - This is a 3-dimensional objective function with three constraint equations.
+
