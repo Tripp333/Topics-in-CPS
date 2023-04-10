@@ -37,7 +37,7 @@ The program has three main parts:
     The Gradient Method to find the optimal solution for that function/iteration
     The SUMT Algorithm which updates the function by changing the r_value
 
-In python, you have to go to the bottom of the file to see where the program actually runs.
+In python, you have to go to close to the bottom of the file to see where the program actually runs.
 The program starts where the line "if __name__ == '__main__':" is.
 
 In python, in order to represent hitting the enter key, you have to do "\n". So, that will come up in a couple of the input files, and I just wanted to let you know.
