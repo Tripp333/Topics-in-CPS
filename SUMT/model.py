@@ -15,7 +15,7 @@ def function_eval(function, variables, point): # This function takes in an expre
     return output
 
 
-def initial_mover(constraint, variables, initial, epsilon, t_var):
+def initial_mover(constraint, variables, initial, epsilon, t_var): # This function moves the initial point, off of a boundary.
     gradient = gradient_gen(variables, constraint)
     num_grad = gradient_eval(variables, gradient, initial, epsilon)
     stepping_function = stepping_function_gen(initial, num_grad, constraint, variables)
@@ -74,7 +74,7 @@ def gradient_gen(variables, function): # This function takes the gradient of an 
     return gradient
 
 
-def constraint_check(constraints, solution, variables):
+def constraint_check(constraints, solution, variables): # This function checks to see if the potential solution point is actually within the feasible region.
     feasible = True
     for constraint in constraints:
         if function_eval(constraint, variables, solution) <= 0:
@@ -179,7 +179,7 @@ def constraint_gen(variables): # This function prompts the user to enter the con
 
         try:
             num_constraints = int(num_constraints) # This tests to see if the user actually told us the total number of constraint equations.
-        except: # If tat value is not an integer, then they are prompted to put in an integer.
+        except: # If that value is not an integer, then they are prompted to put in an integer.
             print("Please input an integer value.")
             continue
 
@@ -260,17 +260,17 @@ def distance_traveled(variables, current, next): # This function is part of the 
 
 def SUMT(variables, epsilon, current, constraints, objective): # This function performs the SUMT algorithm.
     r_value = 1
-    p_function = p_function_gen(constraints, objective, r_value)
+    p_function = p_function_gen(constraints, objective, r_value) # This generates the P(x;r) function.
 
     while True:
-        next = gradient_search(variables, p_function, current, epsilon, constraints, r_value)
+        next = gradient_search(variables, p_function, current, epsilon, constraints, r_value) # Finds the solution to this version of the P(x;r) function.
 
-        if distance_traveled(variables, current, next) < epsilon:
+        if distance_traveled(variables, current, next) < epsilon: # Checks for optimality.
             current = next
             break
 
-        r_value = r_value * 0.01
-        p_function = p_function_gen(constraints, objective, r_value)
+        r_value = r_value * 0.01 # Updates the r_value
+        p_function = p_function_gen(constraints, objective, r_value) # Taking the new r_value, this line generates a new P(x;r) function.
         current = next
         print(current)
 
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     
     constraints = constraint_gen(variables)
 
-    while True:
+    while True: # This prompts the user for the epsilon value of their choice. The default is set to be 0.01, but they have the option of choosing a different value.
         epsilon = input("Default accepted error is 0.01. If a different one is needed, please input now. Otherwise press return: ")
 
         if epsilon == '':
@@ -311,7 +311,7 @@ if __name__ == '__main__':
         break
     x = Symbol('x')
     y = Symbol('y')
-    initial = initialization(constraints, variables, epsilon)
+    initial = initialization(constraints, variables, epsilon) # Creates the initial solution.
     # initial = {x:1,y:1}
 
     if initial != None:
