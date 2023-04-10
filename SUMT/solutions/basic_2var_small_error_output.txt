@@ -1,0 +1,17 @@
+Exponentials should be of the form a**b, multiplication should use the * symbol, and quotient denominators should be put in parenthesis.
+Please input objective function: 2*x-x**2+3*y-y**2
+Please input number of constraints: 1
+Please input constraints of the form:
+g(x) INEQUALITY constant
+x+y <= 2
+Default accepted error is 0.01. If a different one is needed, please input now. Otherwise press return: .000001
+initial solution: {x: 0.9887405826397971, y: 0.3639187728090454}
+iteration 1: {x: 0.648891925991033, y: 0.781043967743716}
+iteration 2: {x: 0.690911492587649, y: 1.18400312885855}
+iteration 3: {x: 0.743055686405775, y: 1.24299705691898}
+iteration 4: {x: 0.749294175913142, y: 1.24929360518813}
+iteration 5: {x: 0.749929583958457, y: 1.24992901467995}
+iteration 6: {x: 0.749993213598289, y: 1.24999264446608}
+iteration 7: {x: 0.749999577453007, y: 1.24999900833543}
+final solution: {x: 0.750000213847389, y: 1.24999964473128}
+maximized objective value: 3.12499992928916
