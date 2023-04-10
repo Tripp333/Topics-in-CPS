@@ -163,8 +163,8 @@ def gradient_search(variables, function, current, epsilon, constraints, r_value)
     stepping_function = stepping_function_gen(next, num_grad, function, variables)
     next = mover_function(variables, num_grad, next, stepping_function, constraints)
 
-    for var in variables:
-        if distance_traveled(variables, current, next) < epsilon * (r_value + epsilon):
+    for var in variables: #This is an optimality test to stop the algorithm from running too long
+        if distance_traveled(variables, current, next) < epsilon * (r_value + epsilon): #approaches epsilon squared as r approaches 0, becomes significant around third iteration of SUMT
             return next
 
 
