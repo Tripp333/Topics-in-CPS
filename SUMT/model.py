@@ -312,7 +312,7 @@ if __name__ == '__main__':
         break
     initial = initialization(constraints, variables, epsilon) # Creates the initial solution.
 
-    if initial != None:
+    if initial != None: #checks to see if the initial found a feasible solution
         solution = SUMT(variables, epsilon, initial, constraints, objective)
         value = function_eval(objective, variables, solution)
 
