@@ -15,7 +15,7 @@ def function_eval(function, variables, point): # This function takes in an expre
     return output
 
 
-def initial_mover(constraint, variables, initial, epsilon, t_var): # This function moves the initial point, off of a boundary.
+def initial_mover(constraint, variables, initial, epsilon, t_var): # This function moves the initial point so it satisfies a constraint.
     gradient = gradient_gen(variables, constraint)
     num_grad = gradient_eval(variables, gradient, initial, epsilon)
     stepping_function = stepping_function_gen(initial, num_grad, constraint, variables)
@@ -34,7 +34,7 @@ def initial_mover(constraint, variables, initial, epsilon, t_var): # This functi
     return initial
 
 
-def initialization(constraints, variables, epsilon): # This function finds an initial solution that is not on the boundary of the constraints.
+def initialization(constraints, variables, epsilon): # This function finds an initial solution that is in the feasible region.
     count = 0
     feasibility_count = 0
     initial = {}
@@ -62,7 +62,7 @@ def initialization(constraints, variables, epsilon): # This function finds an in
             initial = initial_mover(constraint, variables, initial, epsilon, t_var)
             count = 0
 
-    print(initial)
+    print(f"initial solution: {initial}")
     return initial
 
 
@@ -168,7 +168,6 @@ def gradient_search(variables, function, current, epsilon, constraints, r_value)
         if distance_traveled(variables, current, next) < epsilon * (r_value + epsilon):
             return next
 
-    print(next)
 
     return gradient_search(variables, function, next, epsilon, constraints, r_value)
 
@@ -260,6 +259,7 @@ def distance_traveled(variables, current, next): # This function is part of the 
 
 def SUMT(variables, epsilon, current, constraints, objective): # This function performs the SUMT algorithm.
     r_value = 1
+    iteration = 1
     p_function = p_function_gen(constraints, objective, r_value) # This generates the P(x;r) function.
 
     while True:
@@ -272,7 +272,9 @@ def SUMT(variables, epsilon, current, constraints, objective): # This function p
         r_value = r_value * 0.01 # Updates the r_value
         p_function = p_function_gen(constraints, objective, r_value) # Taking the new r_value, this line generates a new P(x;r) function.
         current = next
-        print(current)
+        print(f"iteration {iteration}: {current}")
+
+        iteration += 1
 
     return current
 
@@ -309,27 +311,11 @@ if __name__ == '__main__':
                 continue
 
         break
-    x = Symbol('x')
-    y = Symbol('y')
     initial = initialization(constraints, variables, epsilon) # Creates the initial solution.
-    # initial = {x:1,y:1}
 
     if initial != None:
         solution = SUMT(variables, epsilon, initial, constraints, objective)
-        print(solution)
+        value = function_eval(objective, variables, solution)
 
-
-
-# functin = "x*y-1/(-x**2-y+3)-1/x-1/y"
-
-# func = parse_expr(functin)
-
-# gradient = gradient_gen(func.free_symbols, func)
-
-# print(gradient)
-
-# x = Symbol('x')
-# y = Symbol('y')
-# initial = {x:1,y:1}
-
-# print(gradient_search([x,y], x*y-1/(3-x**2-y)-1/x-1/y, initial, 0.01, [3-x**2-y, x, y]))
+        print(f"final solution: {solution}")
+        print(f"maximized objective value: {value}")
