@@ -3,7 +3,6 @@
 # Tripp Lawrence and Luke Lewis
 # 04/10/2023
 
-import math
 from sympy import *
 from random import *
 
@@ -19,7 +18,7 @@ def initial_mover(constraint, variables, initial, epsilon, t_var): # This functi
     gradient = gradient_gen(variables, constraint)
     num_grad = gradient_eval(variables, gradient, initial, epsilon)
     stepping_function = stepping_function_gen(initial, num_grad, constraint, variables)
-    t_star = solveset(Eq(stepping_function, epsilon), t_var)
+    t_star = solveset(Eq(stepping_function, epsilon), t_var) #this solves the equation for a t_star that works
     
     minimum = t_star.args[0]
     
