@@ -3,7 +3,6 @@
 # Tripp Lawrence and Luke Lewis
 # 04/10/2023
 
-import math
 from sympy import *
 from random import *
 
