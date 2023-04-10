@@ -32,10 +32,12 @@ In the code file, the functions are in the following order:
 
     SUMT(variables, epsilon, current, constraints, objective)
 
+
 The program has three main parts:
     Initialization of initial solution
     The Gradient Method to find the optimal solution for that function/iteration
     The SUMT Algorithm which updates the function by changing the r_value
+
 
 In python, you have to go to close to the bottom of the file to see where the program actually runs.
 The program starts where the line "if __name__ == '__main__':" is.
@@ -47,5 +49,5 @@ In python, in order to represent hitting the enter key, you have to do "\n". So,
 The various solution files are to show some of the various functionality of this program.
     input1.txt/output1.txt  - This contains a basic objective function that was a class example.
     input2.txt/output2.txt - This is the same example as the function above, but the epsilon has been changed to a smaller value (to show the increase in accuracy).
-    input3.txt/output3.txt - This is a 3-dimensional objective function with three constraint equations.
+    input3.txt/output3.txt - This is a 3-dimensional objective function with three constraint equations. If you can only look at one, this example shows the most versatility.
 
